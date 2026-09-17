@@ -11,7 +11,7 @@ val releaseSecrets = Properties().apply {
 }
 val updateRepo = providers.gradleProperty("rollora.updateRepo").orElse("").get()
 require(updateRepo.isEmpty() || Regex("[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+").matches(updateRepo))
-val appVersionName = "1.0.0 Beta"
+val appVersionName = "1.0.1 Beta"
 val versionSlug = appVersionName.lowercase().replace(" ", "-")
 android {
     namespace = "design.techbytes.rollora"
@@ -21,7 +21,7 @@ android {
         applicationId = "design.techbytes.rollora"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
+        versionCode = 2
         versionName = appVersionName
         buildConfigField("String", "UPDATE_REPO", "\"$updateRepo\"")
     }

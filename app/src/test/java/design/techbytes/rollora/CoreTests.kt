@@ -4,6 +4,7 @@ import org.junit.Test
 import design.techbytes.rollora.domain.Rules
 import design.techbytes.rollora.security.Crypto
 import design.techbytes.rollora.transfer.XlsxWriter
+import design.techbytes.rollora.ui.Changelog
 import design.techbytes.rollora.ui.Tutorial
 import java.io.ByteArrayOutputStream
 import java.util.zip.ZipInputStream
@@ -62,5 +63,17 @@ class CoreTests {
    assertTrue("Title should be short enough for a header",step.title.length<=60)
   }
   assertEquals("Titles should be unique",Tutorial.steps.size,Tutorial.steps.map { it.title }.toSet().size)
+ }
+ @Test fun changelogIsWellFormedAndUpToDate() {
+  assertTrue("Changelog must not be empty",Changelog.entries.isNotEmpty())
+  Changelog.entries.forEach { entry ->
+   assertTrue("Version name must not be blank",entry.versionName.isNotBlank())
+   assertTrue("Each entry needs at least one change listed",entry.changes.isNotEmpty())
+   entry.changes.forEach { assertTrue("Change lines must not be blank",it.isNotBlank()) }
+  }
+  assertEquals("Version codes must be unique",Changelog.entries.size,Changelog.entries.map { it.versionCode }.toSet().size)
+  assertEquals("Entries must be sorted newest-first",Changelog.entries.map { it.versionCode },Changelog.entries.map { it.versionCode }.sortedDescending())
+  assertEquals("The newest changelog entry must match the app's current versionCode — add an entry whenever you bump the version",
+   BuildConfig.VERSION_CODE,Changelog.entries.first().versionCode)
  }
 }

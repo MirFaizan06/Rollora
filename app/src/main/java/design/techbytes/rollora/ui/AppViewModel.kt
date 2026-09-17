@@ -45,10 +45,23 @@ class AppViewModel(application: Application): AndroidViewModel(application) {
  var tutorialStep by mutableStateOf<Int?>(null); private set
  var voiceGuidanceEnabled by mutableStateOf(true); private set
  val voiceAvailable: Boolean get() = speech.available
+ private val changelogPrefs by lazy { app.getSharedPreferences("changelog",android.content.Context.MODE_PRIVATE) }
+ var whatsNew by mutableStateOf<List<ChangelogEntry>>(emptyList()); private set
+ var showChangelog by mutableStateOf(false)
  init { refresh(); checkUpdate(false); voiceGuidanceEnabled=tutorialPrefs.getBoolean("voice",true) }
  override fun onCleared() { super.onCleared(); if(speechLazy.isInitialized()) speech.shutdown() }
  fun say(text: String) { notice=text }
- fun maybeOfferTutorialOnFirstRun() { if(tutorialStep==null && !tutorialPrefs.getBoolean("seen",false)) startTutorial() }
+ /** Returns true if the tutorial was offered, so the caller can skip the What's New popup on the same
+  * launch — a brand-new install always sees the tutorial, never a backlog of past release notes. */
+ fun maybeOfferTutorialOnFirstRun(): Boolean {
+  if(tutorialStep==null && !tutorialPrefs.getBoolean("seen",false)) { startTutorial(); return true }
+  return false
+ }
+ fun maybeShowWhatsNew() {
+  val lastSeen=changelogPrefs.getInt("lastSeenVersion",0)
+  if(lastSeen<BuildConfig.VERSION_CODE) whatsNew=Changelog.entries.filter { it.versionCode>lastSeen }
+ }
+ fun dismissWhatsNew() { changelogPrefs.edit { putInt("lastSeenVersion",BuildConfig.VERSION_CODE) }; whatsNew=emptyList() }
  fun startTutorial() { tutorialStep=0; speakCurrentStep() }
  fun nextTutorialStep() { tutorialStep=((tutorialStep ?: 0)+1).coerceAtMost(Tutorial.steps.lastIndex); speakCurrentStep() }
  fun previousTutorialStep() { tutorialStep=((tutorialStep ?: 0)-1).coerceAtLeast(0); speakCurrentStep() }
@@ -85,6 +98,8 @@ class AppViewModel(application: Application): AndroidViewModel(application) {
    require(pin.matches(Regex("[0-9]{6}"))) { "Choose a six-digit PIN." }
    app.repo.profile(Profile(teacher=teacher.trim(),college=college.trim()))
    app.security.setPin(pin)
+   // A brand-new workspace starts fresh: no backlog of "what's new" for versions this install never used.
+   changelogPrefs.edit { putInt("lastSeenVersion",BuildConfig.VERSION_CODE) }
   }
  }
  fun unlock(pin: String) {

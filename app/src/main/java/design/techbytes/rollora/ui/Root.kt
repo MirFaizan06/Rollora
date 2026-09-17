@@ -30,6 +30,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import design.techbytes.rollora.BuildConfig
 import design.techbytes.rollora.R
 import java.io.File
 
@@ -52,6 +53,7 @@ import java.io.File
     if(vm.unlocked && vm.tutorialStep!=null) TutorialOverlay(vm)
    }
   }
+  if(vm.unlocked && vm.tutorialStep==null) WhatsNewDialog(vm)
   if(vm.unlocked) FileDialogs(vm,activity)
  }
 }
@@ -71,7 +73,7 @@ import java.io.File
    Row(verticalAlignment=Alignment.CenterVertically) { Checkbox(accepted,{accepted=it}); Text("I understand local storage and backups.",style=MaterialTheme.typography.bodySmall) }
   }
   Action("Create workspace",accepted && !vm.busy) { vm.initialise(name,college,pin,confirm) }
-  Hint("Mir Faizan  ·  Tech Bytes Design  ·  1.0.0 Beta")
+  Hint("Mir Faizan  ·  Tech Bytes Design  ·  ${BuildConfig.VERSION_NAME}")
  }
 }
 @Composable private fun Unlock(vm: AppViewModel,activity: FragmentActivity) {
@@ -94,10 +96,10 @@ import java.io.File
  }
 }
 @Composable private fun Workspace(vm: AppViewModel) {
- LaunchedEffect(Unit) { vm.maybeOfferTutorialOnFirstRun() }
+ LaunchedEffect(Unit) { if(!vm.maybeOfferTutorialOnFirstRun()) vm.maybeShowWhatsNew() }
  var discard by remember { mutableStateOf(false) }
- fun back() { if(vm.draft!=null) { if(vm.draft!!.dirty) discard=true else vm.draft=null } else vm.groupId=null }
- BackHandler(vm.draft!=null || vm.groupId!=null) { back() }
+ fun back() { when { vm.draft!=null -> if(vm.draft!!.dirty) discard=true else vm.draft=null; vm.showChangelog -> vm.showChangelog=false; else -> vm.groupId=null } }
+ BackHandler(vm.draft!=null || vm.groupId!=null || vm.showChangelog) { back() }
  if(discard) FormDialog("Discard unsaved changes?",{discard=false},"Discard",onConfirm={vm.draft=null;discard=false}) { Text("Only changes since the last save will be discarded.") }
  BoxWithConstraints(Modifier.fillMaxSize()) {
   val wide=maxWidth>=840.dp
@@ -105,10 +107,10 @@ import java.io.File
   Row(Modifier.fillMaxSize()) {
    if(wide && vm.draft==null) NavigationRail(windowInsets=WindowInsets(0.dp)) {
     Image(painterResource(R.drawable.ic_mark),"Rollora",Modifier.size(64.dp).padding(8.dp))
-    nav.forEachIndexed { i,n -> NavigationRailItem(selected=vm.tab==i,onClick={vm.tab=i;vm.groupId=null},icon={Glyph(n.second)},label={Text(n.first)}) }
+    nav.forEachIndexed { i,n -> NavigationRailItem(selected=vm.tab==i,onClick={vm.tab=i;vm.groupId=null;vm.showChangelog=false},icon={Glyph(n.second)},label={Text(n.first)}) }
    }
    Column(Modifier.weight(1f)) {
-    if(vm.groupId!=null || vm.draft!=null) Row(Modifier.fillMaxWidth().padding(horizontal=12.dp),verticalAlignment=Alignment.CenterVertically) {
+    if(vm.groupId!=null || vm.draft!=null || vm.showChangelog) Row(Modifier.fillMaxWidth().padding(horizontal=12.dp),verticalAlignment=Alignment.CenterVertically) {
      TextButton(onClick={back()},enabled=!vm.busy) { Glyph("back"); Spacer(Modifier.width(8.dp)); Text("Back") }
      Spacer(Modifier.weight(1f)); Text("ROLLORA",style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
     }
@@ -117,6 +119,7 @@ import java.io.File
       when {
        vm.draft!=null -> AttendanceScreen(vm)
        vm.groupId!=null -> GroupScreen(vm,vm.groupId!!)
+       vm.showChangelog -> ChangelogScreen(vm)
        else -> AnimatedContent(vm.tab,transitionSpec={fadeIn(tween(180)) togetherWith fadeOut(tween(120))},label="screen") { tab ->
         when(tab) { 0->TodayScreen(vm); 1->GroupsScreen(vm); 2->StatsScreen(vm); 3->CalendarScreen(vm); else->SettingsScreen(vm) }
        }
@@ -127,7 +130,7 @@ import java.io.File
     // `inset` in RolloraRoot; NavigationBar's own default inset would double that gap, pushing the
     // bar's background up and away from the screen edge instead of sitting flush against it.
     if(!wide && vm.draft==null) NavigationBar(windowInsets=WindowInsets(0.dp)) {
-     nav.forEachIndexed { i,n -> NavigationBarItem(selected=vm.tab==i,onClick={vm.tab=i;vm.groupId=null},icon={Glyph(n.second)},label={Text(n.first,maxLines=1)}) }
+     nav.forEachIndexed { i,n -> NavigationBarItem(selected=vm.tab==i,onClick={vm.tab=i;vm.groupId=null;vm.showChangelog=false},icon={Glyph(n.second)},label={Text(n.first,maxLines=1)}) }
     }
    }
   }

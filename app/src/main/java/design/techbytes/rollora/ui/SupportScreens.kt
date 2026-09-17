@@ -151,7 +151,10 @@ import java.util.Locale
    Hint("Installed: ${BuildConfig.VERSION_NAME}")
    Hint(if(BuildConfig.UPDATE_REPO.isBlank()) "No release repository configured. Set rollora.updateRepo when building." else "Public releases: ${BuildConfig.UPDATE_REPO}")
    if(vm.updateStatus.isNotBlank()) Text(vm.updateStatus)
-   TextButton(onClick={vm.checkUpdate(true)}){Text("Check GitHub now")}
+   Row(Modifier.horizontalScroll(rememberScrollState())) {
+    TextButton(onClick={vm.checkUpdate(true)}){Text("Check GitHub now")}
+    TextButton(onClick={vm.showChangelog=true}){Text("Version history")}
+   }
    vm.release?.let { r->
     Text(r.name,fontWeight=FontWeight.Bold);Hint(r.notes)
     if(vm.downloadProgress!=null) {LinearProgressIndicator(progress={vm.downloadProgress ?: 0f},modifier=Modifier.fillMaxWidth());Text("${((vm.downloadProgress ?: 0f)*100).toInt()}% downloaded");TextButton(onClick={vm.cancelDownload()}){Text("Cancel download")}}
@@ -161,7 +164,7 @@ import java.util.Locale
    Hint("Android asks for installation approval. After installation, tap Open to return. Updates require the same package name and signing key; never uninstall to update.")
   } }
   item { Panel {
-   Text("Rollora",fontWeight=FontWeight.Bold,fontSize=23.sp);Text("1.0.0 Beta");Text("Developer · Mir Faizan");Text("Tech Bytes Design")
+   Text("Rollora",fontWeight=FontWeight.Bold,fontSize=23.sp);Text(BuildConfig.VERSION_NAME);Text("Developer · Mir Faizan");Text("Tech Bytes Design")
    Hint("No accounts, ads, analytics or attendance uploads. GitHub receives ordinary update requests. Your chosen sharing app handles files you explicitly share.")
    Hint("Timestamps use device time and time zone. Offline records are not independently certified. App PIN protects the interface; Android's app sandbox and device encryption protect the database. Portable backups use passphrase encryption.")
   } }
