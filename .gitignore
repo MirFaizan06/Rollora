@@ -11,3 +11,4 @@ signing.properties
 *.rollora
 *.xlsx
 build-log-*.txt
+update.json

@@ -140,9 +140,27 @@ Independently verified, not just trusted from the build log:
   certificate DN `CN=Faizan Mir, OU=Tech Bytes Design, O=Tech Bytes Design, L=Srinagar, ST=Jammu & Kashmir, C=IN` — the identity entered during key creation, not a debug placeholder.
 - `aapt dump badging` confirms package `design.techbytes.rollora` (the production ID, no `.debug` suffix),
   `versionCode=1`, `versionName='1.0.0 Beta'`, `minSdk=26`, `targetSdk=36`.
-- **Not yet verified**: installing this APK on a real device, or publishing it as a GitHub release (no
-  release has been published — that requires an explicit go-ahead and is not something this assistant does
-  unprompted, per the original instructions).
+- **Not yet verified**: installing this APK on a real device.
+
+## The GitHub release is published and live (with explicit go-ahead)
+After the debug-verified build above, the user asked to publish for real. GitHub CLI was installed
+(`winget install GitHub.cli`), the user authenticated it themselves via the device-code browser flow (the
+OAuth token never passed through this assistant — `gh` stores it in the OS keychain), and the full source
+was pushed to `https://github.com/MirFaizan06/Rollora` (branch `main`). `scripts/make-update.ps1` generated
+`update.json` from the actual signed release APK, and `gh release create v1.0.0-beta` published both the
+APK and the manifest as release assets.
+
+Independently verified after publishing (not just trusted from the `gh` output):
+- `curl -sI https://github.com/MirFaizan06/Rollora/releases/latest/download/update.json` — 302 redirects to
+  the `v1.0.0-beta` asset, exactly the URL `Updater.check()` requests.
+- The fetched `update.json` content matches what `make-update.ps1` generated (`versionCode=1`,
+  `sha256=58d237e6c93329342692f65003cfb003e598fca9a70bd539198e002d1e50a2d3`, `bytes=9279837`).
+- `curl -sIL` on the `apkUrl` returns `HTTP/1.1 200 OK` with `Content-Length: 9279837`, matching the
+  manifest's `bytes` field exactly.
+- Since this first release's `versionCode` (1) equals the installed app's own version, `Updater.check()`
+  correctly reports "no update" for this exact build — that's expected: there's nothing to update *to*
+  yet. The full download/verify/install path is still only exercised by code review until a second,
+  higher-`versionCode` release exists to actually test the upgrade path end to end.
 
 Do not treat this beta as "production ready" or "fully verified" until that checklist has been run on
 real hardware with a release-signed build, per `docs/DEVICE_ACCEPTANCE.md`.
