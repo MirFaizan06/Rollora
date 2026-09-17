@@ -1,36 +1,56 @@
-# Rollora · 1.0.0 Beta
+# Rollora
 
-> DEBUG-VERIFIED BETA: `testDebugUnitTest`, `lintDebug` and `assembleDebug` all pass in this environment. Real-device UI, biometrics and the live GitHub updater path are still untested — read `STATUS.md` first.
-Native, local-first Android attendance for teachers. Developer: **Mir Faizan**. Company: **Tech Bytes Design**.
+A local, offline-first Android attendance app for college teachers.
 
-## Start here
-1. Read `docs/BUILD_WINDOWS.md` for your Unity Android SDK and separate build JDK.
-2. Build a debug APK for testing using `scripts/build.ps1`.
-3. Follow `docs/DEVICE_ACCEPTANCE.md` on a phone and tablet.
-4. Create your permanent release signing key and configure a public release repository before distributing to teachers.
-5. Read `docs/UPDATES.md` to publish releases. No server, Firebase, Expo, Flask or GitHub access token is required.
+**Developer:** Mir Faizan · **Company:** Tech Bytes Design · **Current version:** 1.0.1 Beta
 
-This ZIP contains source, resources, Gradle wrapper, Windows build scripts, release-manifest generator, vector branding, tests and documentation. Build dependencies download on the first build; this is not an offline SDK/dependency bundle. See `docs/VERIFICATION.md` for the checks actually completed in the delivery environment and `STATUS.md` for what changed to get here.
+Rollora keeps a teacher's class rosters and attendance records entirely on their own phone. There is no account, no login, and no cloud sync — attendance data never leaves the device unless the teacher explicitly exports or backs it up.
 
-## Included workflows
-- Six-digit PIN setup, persisted throttling, optional strong biometrics, background auto-lock and protected screenshots.
-- Teacher/college profile; system, charcoal dark and light themes; phone bottom navigation and tablet rail.
-- Class groups: batch, semester, configurable course type, optional CT component, subject and default time. Semester combinations are not restricted.
-- Students: roll number and name, with internal membership dates. Single entry, validated batch paste, search, rename and end/reactivate membership. Rosters are frozen once a register is saved; a student mistakenly left out can be added afterward only through an explicit, reasoned, audited correction — never a silent rewrite.
-- One class per group per date, enforced by a real database constraint (not just application logic). Present / Absent / Leave, mark-all confirmation, saved drafts, final review, correction reasons, tap/save timestamps, revision audit and reversible cancellation.
-- Automatic Sundays; global and group holidays; explicit reason to record on a day off.
-- In-app statistics from conducted classes. Leave excluded from P/(P+A); N/A when denominator is zero.
-- Real Excel `.xlsx` with date columns, legend, teacher/group metadata, P/A/L counts, percentage, original recorded names and class/mark timestamps.
-- Encrypted portable backups, validation before transactional restore, pre-restore snapshot, fourteen rotating local snapshots and periodic WorkManager backups.
-- Android Save Document and Share actions, including Google Drive when available on the device.
-- GitHub public-release updates: launch check, changelog, progress, cancellation, SHA-256/size/package/version/signing-certificate verification, Android installer handoff.
+## Get Rollora
 
-## Deliberate boundaries
-Android 8.0+ phones/tablets. One teacher workspace per installation. No live account, student-facing login, QR attendance or sync in V1. Those need their own authentication and consent design later. No silent APK installation or forced restart; Android owns installation and the user taps Open afterward. Rollora's proposed name has not been trademark-cleared.
+1. Open the [latest release](https://github.com/MirFaizan06/Rollora/releases/latest).
+2. Download `Rollora-v<version>-release.apk` from the release's Assets.
+3. On an Android 8.0+ phone or tablet, open the downloaded file. Android will ask you to allow installs from this source the first time — allow it, then return and tap install again.
+4. Open Rollora, set a teacher profile and a six-digit PIN, and follow the in-app guided tutorial.
 
-Attendance data stays local. GitHub update requests contain no roster or attendance data. Explicit sharing sends the selected file to the app chosen by the teacher. Android's app sandbox and device encryption protect the live database; it is not separately encrypted with the app PIN. Portable backups are AES-GCM encrypted using a separate passphrase. See `docs/SECURITY_AND_DATA.md`.
+Rollora checks this repository for new versions automatically in the background, and on demand from Settings. Every update is verified (checksum, package identity, and signing certificate) before you're asked to install it, and your attendance data is preserved through the update.
 
-## Code layout
+## What it does
+
+- **Class groups** — batch, semester, course type (Major, Minor, MDC, AEC, Skill, VAC, or a custom type you name), optional CT component, subject, and a default class time.
+- **Students** — roll number and name, added one at a time or pasted in bulk. Leading zeroes in roll numbers (`007`, `0013`) are always preserved exactly as typed.
+- **Attendance** — Present / Absent / Leave, saved drafts, a final review before a register locks in, and a required reason for any later correction. A saved register is never silently rewritten: even a student missed by mistake is added back only through an explicit, audited correction.
+- **Calendar** — Sundays are calculated automatically; add your own holidays, either for every class or just one. Recording a class on a day off always asks why.
+- **Statistics** — based only on classes that were actually conducted and finalised. Percentage is Present ÷ (Present + Absent); Leave is reported separately and never counts against a student.
+- **Excel export** — a genuine `.xlsx` workbook for any class and date range, with a legend, per-student totals, and original recorded timestamps.
+- **Backups** — rotating encrypted local snapshots happen automatically, plus a portable encrypted backup with a passphrase you choose, shareable to Google Drive or another device.
+- **Guided tutorial** — a short in-app walkthrough with optional spoken narration, replayable any time from Settings.
+- **What's New** — a short popup after every update, and a full version history in Settings, so you always know what changed.
+
+## Privacy
+
+All attendance and student data stays on the device. There are no accounts, no ads, no analytics, and attendance data is never uploaded anywhere. The only network activity Rollora performs is checking this GitHub repository for a newer release — those requests carry no roster or attendance data. See [`docs/SECURITY_AND_DATA.md`](docs/SECURITY_AND_DATA.md) for the full data and security model.
+
+## Status
+
+Rollora is in beta. It has a fully passing automated test suite and a clean signed release build, but has not yet completed a full round of testing on real devices — see [`STATUS.md`](STATUS.md) for exactly what has and hasn't been verified. Treat it as an early release for a small group of teachers who understand that, rather than a finished, widely-distributed product.
+
+## Scope
+
+Android 8.0+ phones and tablets; one teacher workspace per installation. There is no student-facing login, QR attendance, or online sync in this version. "Rollora" is a working name and has not been trademark-cleared.
+
+## For developers
+
+Rollora is native Kotlin + Jetpack Compose with Room for local persistence — no backend, no server. To build it yourself on Windows:
+
+```powershell
+git clone https://github.com/MirFaizan06/Rollora.git
+cd Rollora
+.\scripts\build.ps1 -SdkPath 'D:\YourAndroidSDK' -JdkPath 'D:\YourJDK17'
+```
+
+See [`docs/BUILD_WINDOWS.md`](docs/BUILD_WINDOWS.md) for full build instructions (including reusing a Unity-bundled Android SDK/JDK), [`docs/DEPENDENCIES.md`](docs/DEPENDENCIES.md) for pinned dependency versions and why, and [`docs/UPDATES.md`](docs/UPDATES.md) for how releases here get published.
+
 | Area | Responsibility |
 |---|---|
 | `data/` | Room entities, DAO, transaction boundary, snapshot validation/serialization |
@@ -38,8 +58,10 @@ Attendance data stays local. GitHub update requests contain no roster or attenda
 | `security/` | Keystore keys, PIN verification, authenticated encryption |
 | `transfer/` | Local/portable backups and OOXML export |
 | `update/` | Public GitHub updater and installer integration |
-| `ui/` | ViewModel, adaptive Compose screens, forms and custom drawn icons |
-| `scripts/` | Windows builds, release metadata and programmatic logo |
-| `app/src/test/` | Rules, encryption, workbook and snapshot tests, plus Robolectric/Room persistence integration tests |
+| `ui/` | ViewModel, adaptive Compose screens, guided tutorial and changelog |
+| `scripts/` | Windows build/release scripts and the programmatic logo generator |
+| `app/src/test/` | Unit tests plus Robolectric/Room persistence integration tests |
 
-Only `local.properties` and `signing.properties` are machine-specific. They are intentionally excluded. Never commit your signing key, passphrases, actual attendance, or backups to GitHub.
+## License and credit
+
+Rollora's own source and branding were created for Mir Faizan / Tech Bytes Design. See [`NOTICE.md`](NOTICE.md) for the third-party license notices that apply to build tooling and dependencies (Gradle wrapper, AndroidX, Kotlin, and others fetched at build time).
