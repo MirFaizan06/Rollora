@@ -1,0 +1,4 @@
+storeFile=keys/rollora-release.jks
+storePassword=REPLACE_LOCALLY
+keyAlias=rollora
+keyPassword=REPLACE_LOCALLY

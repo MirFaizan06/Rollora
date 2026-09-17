@@ -1,0 +1,13 @@
+.gradle/
+.idea/
+.kotlin/
+.claude/
+local.properties
+signing.properties
+*.jks
+*.keystore
+**/build/
+.tools/
+*.rollora
+*.xlsx
+build-log-*.txt
